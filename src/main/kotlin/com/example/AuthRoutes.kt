@@ -97,6 +97,11 @@ fun Route.signIn(
             user.copy(isLoggedIn = true)
         )
 
+        if(!wasAcknowledged) {
+            call.respond(HttpStatusCode.InternalServerError)
+            return@post
+        }
+
         call.respond(
             status = HttpStatusCode.OK,
             message = LoginResponse(
