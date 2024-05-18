@@ -17,7 +17,5 @@ data class Record(
     val name: String,
     val description: String,
     val isTask: Boolean,
-    //val urgency: String,
     val deadline: Long,
-    //val tags: List<String>
 )
