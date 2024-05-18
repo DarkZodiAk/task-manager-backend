@@ -1,9 +1,9 @@
 package com.example
 
 import com.example.data.local.record.RecordDataSource
-import com.example.data.mappers.toRecord
-import com.example.data.mappers.toRecordDto
-import com.example.data.remote.dto.RecordDto
+import com.example.data.local.toRecord
+import com.example.data.local.toRecordDto
+import com.example.data.remote.RecordDto
 import com.example.data.remote.responses.RecordsResponse
 import io.ktor.http.*
 import io.ktor.server.application.*

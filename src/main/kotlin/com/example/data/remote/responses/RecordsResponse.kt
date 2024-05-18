@@ -1,6 +1,6 @@
 package com.example.data.remote.responses
 
-import com.example.data.remote.dto.RecordDto
+import com.example.data.remote.RecordDto
 import kotlinx.serialization.Serializable
 
 @Serializable

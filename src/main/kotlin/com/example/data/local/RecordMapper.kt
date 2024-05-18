@@ -1,7 +1,7 @@
-package com.example.data.mappers
+package com.example.data.local
 
 import com.example.data.local.record.Record
-import com.example.data.remote.dto.RecordDto
+import com.example.data.remote.RecordDto
 import org.bson.types.ObjectId
 
 fun Record.toRecordDto(): RecordDto {

@@ -2,8 +2,6 @@ package com.example
 
 import com.example.data.local.record.RecordDataSource
 import com.example.data.local.record.RecordList
-import com.example.data.local.tag.TagDataSource
-import com.example.data.local.tag.TagList
 import com.example.data.local.user.User
 import com.example.data.local.user.UserDataSource
 import com.example.data.remote.requests.LoginRequest
@@ -25,8 +23,7 @@ import io.ktor.server.routing.*
 fun Route.signUp(
     hashingService: HashingService,
     userDataSource: UserDataSource,
-    recordDataSource: RecordDataSource,
-    tagDataSource: TagDataSource
+    recordDataSource: RecordDataSource
 ) {
     post("signup") {
         val request = call.receiveNullable<RegisterRequest>() ?: run {
@@ -48,13 +45,6 @@ fun Route.signUp(
         }
 
         wasAcknowledged = recordDataSource.upsertRecordList(RecordList(user.id))
-        if(!wasAcknowledged) {
-            call.respond(HttpStatusCode.InternalServerError)
-            userDataSource.deleteUserById(user.id.toString())
-            return@post
-        }
-
-        wasAcknowledged = tagDataSource.upsertTagList(TagList(user.id))
         if(!wasAcknowledged) {
             call.respond(HttpStatusCode.InternalServerError)
             userDataSource.deleteUserById(user.id.toString())
@@ -125,16 +115,6 @@ fun Route.authenticate() {
     }
 }
 
-fun Route.getSecretInfo() {
-    authenticate {
-        get("secret") {
-            val principal = call.principal<JWTPrincipal>()
-            val userId = principal?.getClaim("userId", String::class)
-            call.respond(HttpStatusCode.OK, "User id is $userId")
-        }
-    }
-}
-
 fun Route.logout(
     userDataSource: UserDataSource
 ) {
@@ -156,39 +136,6 @@ fun Route.logout(
                 call.respond(HttpStatusCode.InternalServerError)
                 return@get
             }
-            call.respond(HttpStatusCode.OK)
-        }
-    }
-}
-
-fun Route.deleteUser(
-    userDataSource: UserDataSource,
-    recordDataSource: RecordDataSource,
-    tagDataSource: TagDataSource
-) {
-    authenticate {
-        delete("delete_user") {
-            val principal = call.principal<JWTPrincipal>()
-            val userId = principal?.getClaim("userId", String::class) ?: run {
-                call.respond(HttpStatusCode.InternalServerError)
-                return@delete
-            }
-            var wasAcknowledged = userDataSource.deleteUserById(userId)
-            if(!wasAcknowledged) {
-                call.respond(HttpStatusCode.InternalServerError)
-                return@delete
-            }
-            wasAcknowledged = recordDataSource.deleteAllUserRecords(userId)
-            if(!wasAcknowledged) {
-                call.respond(HttpStatusCode.InternalServerError)
-                return@delete
-            }
-            wasAcknowledged = tagDataSource.deleteAllUserTags(userId)
-            if(!wasAcknowledged) {
-                call.respond(HttpStatusCode.InternalServerError)
-                return@delete
-            }
-
             call.respond(HttpStatusCode.OK)
         }
     }
