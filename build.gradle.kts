@@ -9,6 +9,7 @@ plugins {
     kotlin("jvm") version "1.9.22"
     id("io.ktor.plugin") version "2.3.7"
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.22"
+    id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
 group = "com.example"
@@ -16,6 +17,7 @@ version = "0.0.1"
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
+    project.setProperty("mainClassName", mainClass.get())
 
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
@@ -25,6 +27,8 @@ repositories {
     mavenCentral()
     maven { url = uri("https://maven.pkg.jetbrains.space/public/p/ktor/eap") }
 }
+
+val sshAntTask = configurations.create("sshAntTask")
 
 dependencies {
     implementation("io.ktor:ktor-server-call-logging-jvm")
@@ -42,6 +46,29 @@ dependencies {
     implementation("org.litote.kmongo:kmongo-coroutine:$kmongo_version")
 
     implementation("commons-codec:commons-codec:$commons_codec_version")
+
+    sshAntTask("org.apache.ant:ant-jsch:1.10.15")
+}
+
+tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+    manifest {
+        attributes(
+            "Main-Class" to application.mainClass.get()
+        )
+    }
+}
+
+ant.withGroovyBuilder {
+    "taskdef"(
+        "name" to "scp",
+        "classname" to "org.apache.tools.ant.taskdefs.optional.ssh.Scp",
+        "classpath" to configurations.get("sshAntTask").asPath
+    )
+    "taskdef"(
+        "name" to "ssh",
+        "classname" to "org.apache.tools.ant.taskdefs.optional.ssh.SSHExec",
+        "classpath" to configurations.get("sshAntTask").asPath
+    )
 }
 
 task("deploy") {
@@ -50,13 +77,13 @@ task("deploy") {
         doLast {
             val knownHosts = File.createTempFile("knownhosts", "txt")
             val user = "root"
-            val host = "145.14.158.77"
-            val key = file("keys/jwtauthkey-yt")
+            val host = "85.192.56.17"
+            val key = file("keys/tm_key")
             val jarFileName = "com.plcoding.ktor-jwt-auth-$version-all.jar"
             try {
                 "scp"(
                     "file" to file("build/libs/$jarFileName"),
-                    "todir" to "$user@$host:/root/jwtauth",
+                    "todir" to "$user@$host:/root/taskmanager",
                     "keyfile" to key,
                     "trust" to true,
                     "knownhosts" to knownHosts
@@ -67,7 +94,7 @@ task("deploy") {
                     "keyfile" to key,
                     "trust" to true,
                     "knownhosts" to knownHosts,
-                    "command" to "mv /root/jwtauth/$jarFileName /root/jwtauth/jwtauth.jar"
+                    "command" to "mv /root/jwtauth/$jarFileName /root/taskmanager/taskmanager.jar"
                 )
                 "ssh"(
                     "host" to host,
@@ -75,7 +102,7 @@ task("deploy") {
                     "keyfile" to key,
                     "trust" to true,
                     "knownhosts" to knownHosts,
-                    "command" to "systemctl stop jwtauth"
+                    "command" to "systemctl stop taskmanager"
                 )
                 "ssh"(
                     "host" to host,
@@ -83,7 +110,7 @@ task("deploy") {
                     "keyfile" to key,
                     "trust" to true,
                     "knownhosts" to knownHosts,
-                    "command" to "systemctl start jwtauth"
+                    "command" to "systemctl start taskmanager"
                 )
             } finally {
                 knownHosts.delete()
