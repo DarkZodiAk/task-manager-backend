@@ -47,6 +47,8 @@ dependencies {
 
     implementation("commons-codec:commons-codec:$commons_codec_version")
 
+    implementation("com.sun.mail:javax.mail:1.6.2")
+
     sshAntTask("org.apache.ant:ant-jsch:1.10.15")
 }
 

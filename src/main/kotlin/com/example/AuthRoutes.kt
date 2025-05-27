@@ -1,5 +1,6 @@
 package com.example
 
+import com.example.data.local.matchers.EmailValidator
 import com.example.data.local.record.RecordDataSource
 import com.example.data.local.record.RecordList
 import com.example.data.local.user.User
@@ -23,13 +24,23 @@ import io.ktor.server.routing.*
 fun Route.signUp(
     hashingService: HashingService,
     userDataSource: UserDataSource,
-    recordDataSource: RecordDataSource
+    recordDataSource: RecordDataSource,
+    validator: EmailValidator
 ) {
     post("signup") {
         val request = call.receiveNullable<RegisterRequest>() ?: run {
-            call.respond(HttpStatusCode.BadRequest)
+            call.respond(HttpStatusCode.BadRequest, "Empty request")
             return@post
         }
+
+        if(!validator.validate(request.email)) {
+            call.respond(HttpStatusCode.BadRequest, "Incorrect email")
+        }
+
+        if(userDataSource.getUserByEmail(request.email) != null) {
+            call.respond(HttpStatusCode.BadRequest, "User with that email already exists")
+        }
+
         val saltedHash = hashingService.generateSaltedHash(request.password)
         val user = User(
             email = request.email,
@@ -63,7 +74,7 @@ fun Route.signIn(
 ) {
     post("signin") {
         val request = call.receiveNullable<LoginRequest>() ?: run {
-            call.respond(HttpStatusCode.BadRequest)
+            call.respond(HttpStatusCode.BadRequest, "Empty request")
             return@post
         }
 

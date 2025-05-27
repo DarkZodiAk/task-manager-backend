@@ -19,7 +19,7 @@ fun Route.upsertRecord(
     authenticate {
         post("upsert_record") {
             val request = call.receiveNullable<RecordDto>() ?: run {
-                call.respond(HttpStatusCode.BadRequest)
+                call.respond(HttpStatusCode.BadRequest, "Empty request")
                 return@post
             }
 
@@ -73,7 +73,7 @@ fun Route.delete_record(
     authenticate {
         delete("delete_record/{id}") {
             val recordId = call.parameters["id"] ?: run {
-                call.respond(HttpStatusCode.BadRequest)
+                call.respond(HttpStatusCode.BadRequest, "Id is not found")
                 return@delete
             }
 

@@ -1,6 +1,7 @@
 package com.example.plugins
 
 import com.example.*
+import com.example.data.local.matchers.EmailValidatorImpl
 import com.example.data.local.record.RecordDataSource
 import com.example.data.local.user.UserDataSource
 import com.sandbox.security.hashing.HashingService
@@ -18,7 +19,7 @@ fun Application.configureRouting(
 ) {
     routing {
         signIn(hashingService, userDataSource, tokenService, tokenConfig)
-        signUp(hashingService, userDataSource, recordDataSource)
+        signUp(hashingService, userDataSource, recordDataSource, EmailValidatorImpl)
         authenticate()
         logout(userDataSource)
 
